@@ -452,7 +452,7 @@ const ACTIVITY_STRINGS = {
         14: { ru: "3-й ", en: "3rd " },
     },
     "16": {
-        1: { ru: "Змея", en: "Snake" },
+        1: { ru: "Торт", en: "Cake" },
         2: { ru: "Макс и я строим половину торта каждый. Постройте весь торт. Сколько шпилек каждого цвета имеет весь торт в виде сверху?", en: "Max and I build half of a cake each. Build the whole cake. How many studs of each color does the whole cake have in top view?" },
         3: { ru: "Праздничный торт", en: "Party cake" },
         4: { ru: "Миа и я строим четверть торта каждый. Постройте весь торт. Сколько шпилек каждого цвета имеет весь торт в виде сверху?", en: "Mia and I build a quarter of a cake each. Build the whole cake. How many studs of each color does the whole cake have in top view?" },

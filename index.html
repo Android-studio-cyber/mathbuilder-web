@@ -3,127 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MathBuilder — LEGO Education MoreToMath</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>MathBuilder — LEGO® Education MoreToMath</title>
+    <meta name="description" content="MathBuilder — интерактивные уроки математики LEGO Education MoreToMath. 16 активностей, 155 заданий.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23ce1126'/%3E%3Ccircle cx='30' cy='30' r='10' fill='%23fff'/%3E%3Ccircle cx='70' cy='30' r='10' fill='%23fff'/%3E%3Ccircle cx='30' cy='70' r='10' fill='%23fff'/%3E%3Ccircle cx='70' cy='70' r='10' fill='%23fff'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/style.css?v=2.0">
 </head>
 <body>
-    <div id="app">
-        <!-- Экран загрузки -->
-        <div id="loader" class="screen active">
-            <div class="loader-content">
-                <h1>MathBuilder</h1>
-                <p id="loader-text">Загрузка...</p>
-                <div class="progress-bar">
-                    <div id="progress-fill"></div>
-                </div>
+<div id="app">
+
+    <!-- ЭКРАН ЗАГРУЗКИ -->
+    <div id="loader" class="screen screen-loader is-active">
+        <div class="loader-card">
+            <div class="loader-logo">
+                <span class="brick-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <span>MathBuilder</span>
             </div>
-        </div>
-
-        <!-- Главное меню / Лобби -->
-        <div id="lobby" class="screen hidden">
-            <header class="app-header">
-                <div class="logo">MathBuilder</div>
-                <div class="header-actions">
-                    <button id="btn-settings" class="icon-btn" title="Настройки">⚙️</button>
-                    <div class="language-switch" id="language-switch">
-                        <button class="lang-btn active" data-lang="ru">RU</button>
-                        <button class="lang-btn" data-lang="en">EN</button>
-                    </div>
-                </div>
-            </header>
-
-            <nav class="main-nav">
-                <button class="nav-item active" data-section="lessons">Уроки</button>
-                <button class="nav-item" data-section="builder">Конструктор</button>
-                <button class="nav-item" data-section="resources">Ресурсы</button>
-                <button class="nav-item" data-section="settings">Настройки</button>
-            </nav>
-
-            <div class="content">
-                <!-- Уроки -->
-                <section id="section-lessons" class="section active">
-                    <h2>Лобби уроков</h2>
-                    <p class="subtitle">Выберите активность для начала</p>
-                    <div class="lessons-grid" id="lessons-grid">
-                        <!-- Карточки уроков будут добавлены JS -->
-                    </div>
-                </section>
-
-                <!-- Конструктор -->
-                <section id="section-builder" class="section hidden">
-                    <h2>Конструктор</h2>
-                    <p class="subtitle">Свободное строительство из кирпичиков</p>
-                    <div class="builder-stage" id="builder-stage">
-                        <!-- 3D сцена будет здесь -->
-                        <div class="builder-placeholder">
-                            <p>Режим конструктора будет доступен в следующей версии</p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Ресурсы -->
-                <section id="section-resources" class="section hidden">
-                    <h2>Образовательные ресурсы</h2>
-                    <p class="subtitle">PDF-материалы к урокам</p>
-                    <div class="resources-list" id="resources-list">
-                        <!-- Список ресурсов -->
-                    </div>
-                </section>
-
-                <!-- Настройки -->
-                <section id="section-settings" class="section hidden">
-                    <h2>Настройки</h2>
-                    <div class="settings-group">
-                        <label>Язык приложения:</label>
-                        <div class="language-select">
-                            <button class="lang-option active" data-lang="ru">Русский</button>
-                            <button class="lang-option" data-lang="en">English</button>
-                        </div>
-                    </div>
-                    <div class="settings-group">
-                        <label>Перезапуск приложения:</label>
-                        <p class="note">После смены языка обновите страницу, чтобы изменения вступили в силу.</p>
-                    </div>
-                </section>
-            </div>
-        </div>
-
-        <!-- Активность (задание) -->
-        <div id="activity" class="screen hidden">
-            <header class="app-header">
-                <button id="btn-back-to-lobby" class="icon-btn" title="Назад">←</button>
-                <div class="logo" id="activity-title">Активность</div>
-                <div class="header-actions">
-                    <button id="btn-activity-settings" class="icon-btn" title="Настройки">⚙️</button>
-                </div>
-            </header>
-
-            <div class="activity-layout">
-                <aside class="activity-sidebar">
-                    <div class="dialogue-box" id="dialogue-box">
-                        <div class="dialogue-image" id="dialogue-image"></div>
-                        <div class="dialogue-text" id="dialogue-text"></div>
-                    </div>
-                    <div class="progress-info">
-                        <div class="task-counter" id="task-counter">Задание 1 из 1</div>
-                    </div>
-                </aside>
-
-                <main class="activity-main">
-                    <div class="builder-stage" id="activity-stage">
-                        <div class="activity-placeholder">
-                            <p>3D сцена активности будет здесь</p>
-                        </div>
-                    </div>
-                    <div class="answer-fields" id="answer-fields">
-                        <!-- Поля ответов будут добавлены JS -->
-                    </div>
-                </main>
-            </div>
+            <p class="loader-sub" data-i18n="loading">Загрузка…</p>
+            <div class="progress-bar"><div id="progress-fill"></div></div>
+            <p class="loader-tagline">LEGO® Education MoreToMath</p>
         </div>
     </div>
 
-    <script src="js/translations.js"></script>
-    <script src="js/app.js"></script>
+    <!-- ЛОББИ -->
+    <div id="lobby" class="screen">
+        <header class="app-header">
+            <div class="brand">
+                <span class="brick-logo small" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <span class="brand-name">MathBuilder</span>
+            </div>
+            <div class="header-right">
+                <div class="lang-switch" role="group" aria-label="Language">
+                    <button type="button" class="lang-btn" data-lang="ru">RU</button>
+                    <button type="button" class="lang-btn" data-lang="en">EN</button>
+                </div>
+            </div>
+        </header>
+
+        <nav class="main-nav" id="main-nav">
+            <button type="button" class="nav-item is-active" data-section="lessons">
+                <span class="nav-ico">📚</span><span data-i18n="navLessons">Уроки</span>
+            </button>
+            <button type="button" class="nav-item" data-section="builder">
+                <span class="nav-ico">🧱</span><span data-i18n="navBuilder">Конструктор</span>
+            </button>
+            <button type="button" class="nav-item" data-section="resources">
+                <span class="nav-ico">📄</span><span data-i18n="navResources">Ресурсы</span>
+            </button>
+            <button type="button" class="nav-item" data-section="settings">
+                <span class="nav-ico">⚙️</span><span data-i18n="navSettings">Настройки</span>
+            </button>
+        </nav>
+
+        <div class="content">
+            <!-- УРОКИ -->
+            <section class="section is-active" id="section-lessons">
+                <div class="section-head">
+                    <h2 data-i18n="lobbyTitle">Лобби уроков</h2>
+                    <p class="subtitle" data-i18n="lobbySubtitle">Выберите активность, чтобы начать занятие</p>
+                </div>
+                <div class="chips" id="theme-chips"></div>
+                <div class="activity-grid" id="activity-grid"></div>
+            </section>
+
+            <!-- КОНСТРУКТОР -->
+            <section class="section" id="section-builder">
+                <div class="section-head">
+                    <h2 data-i18n="builderTitle">Конструктор</h2>
+                    <p class="subtitle" data-i18n="builderSubtitle">Свободная игра с кирпичиками</p>
+                </div>
+                <div class="panel placeholder-panel">
+                    <div class="placeholder-ico">🧱</div>
+                    <h3 data-i18n="builderHead">3D-конструктор появится в следующей версии</h3>
+                    <p data-i18n="builderText">В оригинальном приложении этот раздел — пустая пластина и полная палитра кирпичиков для свободного строительства. Перенос 3D-движка в браузер — следующий этап работы.</p>
+                    <p class="muted" data-i18n="builderNote">А пока все 155 заданий с картинками и полями ответов уже доступны в разделе «Уроки».</p>
+                    <button type="button" class="btn primary" data-goto="lessons" data-i18n="builderCta">Перейти к урокам</button>
+                </div>
+            </section>
+
+            <!-- РЕСУРСЫ -->
+            <section class="section" id="section-resources">
+                <div class="section-head">
+                    <h2 data-i18n="resourcesTitle">Образовательные ресурсы</h2>
+                    <p class="subtitle" data-i18n="resourcesSubtitle">Материалы к урокам MoreToMath Curriculum Pack 1–2</p>
+                </div>
+                <div class="cards-3">
+                    <article class="panel resource-card">
+                        <div class="resource-ico">📘</div>
+                        <h3 data-i18n="res1Title">План урока</h3>
+                        <p data-i18n="res1Text">Пошаговый план занятия: цель, материалы, ход урока и вопросы для обсуждения.</p>
+                    </article>
+                    <article class="panel resource-card">
+                        <div class="resource-ico">📝</div>
+                        <h3 data-i18n="res2Title">Раздаточный материал</h3>
+                        <p data-i18n="res2Text">Рабочие листы для учеников: построение моделей, запись чисел и сравнение результатов.</p>
+                    </article>
+                    <article class="panel resource-card">
+                        <div class="resource-ico">🧩</div>
+                        <h3 data-i18n="res3Title">Наборы кирпичиков</h3>
+                        <p data-i18n="res3Text">Каждое задание рассчитано на набор LEGO MoreToMath: пластины, кирпичи и фигурки персонажей.</p>
+                    </article>
+                </div>
+                <p class="muted resources-note" data-i18n="resNote">PDF-материалы входят в комплект MoreToMath Curriculum Pack 1–2 и распространяются вместе с набором LEGO Education.</p>
+            </section>
+
+            <!-- НАСТРОЙКИ -->
+            <section class="section" id="section-settings">
+                <div class="section-head">
+                    <h2 data-i18n="settingsTitle">Настройки</h2>
+                    <p class="subtitle" data-i18n="settingsSubtitle">Язык, прогресс и сведения о приложении</p>
+                </div>
+
+                <div class="panel settings-panel">
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-title" data-i18n="settingLang">Язык приложения</div>
+                            <div class="setting-desc" data-i18n="settingLangDesc">Переключение применяется сразу, перезапуск не нужен</div>
+                        </div>
+                        <div class="lang-switch big" role="group">
+                            <button type="button" class="lang-btn" data-lang="ru">Русский</button>
+                            <button type="button" class="lang-btn" data-lang="en">English</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-title" data-i18n="settingProgress">Прогресс</div>
+                            <div class="setting-desc" id="progress-summary">—</div>
+                        </div>
+                        <button type="button" class="btn danger" id="btn-reset" data-i18n="settingReset">Сбросить прогресс</button>
+                    </div>
+
+                    <div class="setting-row">
+                        <div>
+                            <div class="setting-title" data-i18n="settingAbout">О приложении</div>
+                            <div class="setting-desc" data-i18n="settingAboutDesc">Веб-версия MathBuilder: 16 активностей, 155 заданий, русская и английская локализация.</div>
+                        </div>
+                        <span class="version-badge">v2.0 · web</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ЭКРАН АКТИВНОСТИ -->
+    <div id="activity" class="screen">
+        <header class="app-header activity-header">
+            <button type="button" class="icon-btn" id="btn-back" title="Назад">←</button>
+            <div class="activity-heading">
+                <div class="activity-title" id="activity-title"></div>
+                <div class="activity-sub" id="activity-sub"></div>
+            </div>
+            <div class="header-right">
+                <div class="lang-switch" role="group" aria-label="Language">
+                    <button type="button" class="lang-btn" data-lang="ru">RU</button>
+                    <button type="button" class="lang-btn" data-lang="en">EN</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="activity-progress" aria-hidden="true"><div id="activity-progress-fill"></div></div>
+
+        <div class="activity-body">
+            <aside class="side">
+                <div class="panel dialogue-card">
+                    <div class="dialogue-avatar" id="dialogue-avatar"></div>
+                    <div class="dialogue-main">
+                        <div class="dialogue-text" id="dialogue-text"></div>
+                        <button type="button" class="speak-btn" id="btn-speak">
+                            <span aria-hidden="true">🔊</span><span data-i18n="listen">Прослушать</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel reference-card" id="reference-card">
+                    <div class="card-label" data-i18n="reference">Образец</div>
+                    <div class="reference-images" id="reference-images"></div>
+                </div>
+            </aside>
+
+            <main class="main">
+                <div class="panel answer-card">
+                    <div class="card-label" data-i18n="answerLabel">Ответ</div>
+                    <div class="answer-groups" id="answer-groups"></div>
+                    <p class="answer-hint" id="answer-hint" data-i18n="answerHint">Введите числа в поля и нажмите «Далее»</p>
+                </div>
+
+                <div class="nav-row">
+                    <button type="button" class="nav-btn" id="btn-prev">← <span data-i18n="prev">Назад</span></button>
+                    <button type="button" class="nav-btn" id="btn-repeat">🔁 <span data-i18n="repeat">Повтор</span></button>
+                    <button type="button" class="nav-btn done-btn" id="btn-done">✓ <span data-i18n="done">Готово</span></button>
+                    <button type="button" class="nav-btn primary" id="btn-next"><span data-i18n="next">Далее</span> →</button>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ПРОСМОТР КАРТИНКИ -->
+    <div id="image-modal" class="modal">
+        <button type="button" class="modal-close" id="modal-close" aria-label="Закрыть">×</button>
+        <img id="modal-img" alt="">
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
+</div>
+
+<script src="js/translations.js?v=2.0"></script>
+<script src="js/data.js?v=2.0"></script>
+<script src="js/app.js?v=2.0"></script>
 </body>
 </html>
