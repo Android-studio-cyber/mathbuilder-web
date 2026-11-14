@@ -15,6 +15,19 @@
     var ACT = TR.ACTIVITY_STRINGS || {};
     var MAIN = TR.MAIN_STRINGS || {};
 
+    /* Переписанные вручную русские условия заданий (js/task-texts-ru.js) */
+    var RU_TEXTS = window.MB_RU_TEXTS || {};
+    Object.keys(RU_TEXTS).forEach(function (actId) {
+        var table = RU_TEXTS[actId] || {};
+        if (!ACT[actId]) ACT[actId] = {};
+        Object.keys(table).forEach(function (ref) {
+            var text = table[ref];
+            if (!text) return;
+            if (ACT[actId][ref]) ACT[actId][ref].ru = text;
+            else ACT[actId][ref] = { ru: text, en: '' };
+        });
+    });
+
     /* ---------- Тексты интерфейса ---------- */
 
     var UI = {
@@ -59,6 +72,23 @@
             builderText: 'В оригинальном приложении этот раздел — пустая пластина и полная палитра кирпичиков для свободного строительства. Перенос 3D-движка в браузер — следующий этап работы.',
             builderNote: 'А пока все 155 заданий с картинками и полями ответов уже доступны в разделе «Уроки».',
             builderCta: 'Перейти к урокам',
+            buildHere: 'Стройте здесь',
+            studTip: '1 шип — это один пупырышек на кирпичике',
+            builderTip: 'Крутите поле мышью или пальцем, ставьте кирпичики на пластину',
+            emptyHint: 'Нажмите на пластину, чтобы поставить кирпичик. Размер и цвет выбирайте под пластиной.',
+            bricks: 'Кирпичики',
+            studs: 'Шипы',
+            height: 'Высота',
+            length: 'Длина',
+            width: 'Ширина',
+            viewLeft: 'Повернуть влево',
+            viewRight: 'Повернуть вправо',
+            zoomIn: 'Приблизить',
+            zoomOut: 'Отдалить',
+            rotateBrick: 'Повернуть кирпичик',
+            erase: 'Ластик',
+            undo: 'Отменить',
+            clear: 'Очистить пластину',
             resourcesTitle: 'Образовательные ресурсы',
             resourcesSubtitle: 'Материалы к урокам MoreToMath Curriculum Pack 1–2',
             res1Title: 'План урока',
@@ -124,6 +154,23 @@
             builderText: 'In the original app this section is an empty baseplate and the full brick palette for free building. Porting the 3D engine to the browser is the next step.',
             builderNote: 'Meanwhile all 155 tasks with pictures and answer fields are already available in the Lessons section.',
             builderCta: 'Go to lessons',
+            buildHere: 'Build here',
+            studTip: '1 stud = one bump on a brick',
+            builderTip: 'Drag to rotate the plate, tap to place bricks',
+            emptyHint: 'Tap the plate to place a brick. Choose the size and colour below.',
+            bricks: 'Bricks',
+            studs: 'Studs',
+            height: 'Height',
+            length: 'Length',
+            width: 'Width',
+            viewLeft: 'Rotate left',
+            viewRight: 'Rotate right',
+            zoomIn: 'Zoom in',
+            zoomOut: 'Zoom out',
+            rotateBrick: 'Rotate brick',
+            erase: 'Eraser',
+            undo: 'Undo',
+            clear: 'Clear plate',
             resourcesTitle: 'Educational Resources',
             resourcesSubtitle: 'Materials for MoreToMath Curriculum Pack 1–2 lessons',
             res1Title: 'Lesson plan',
@@ -164,7 +211,8 @@
     var STORAGE = {
         lang: 'mb.lang',
         answers: 'mb.answers.v2',
-        done: 'mb.done.v2'
+        done: 'mb.done.v2',
+        builds: 'mb.builds.v1'
     };
 
     /* ---------- Состояние ---------- */
@@ -172,12 +220,16 @@
     var lang = 'ru';
     var answers = {};
     var doneMap = {};
+    var builds = {};
     var state = { activityId: null, taskIndex: 0, filter: 'all', section: 'lessons' };
     var tasksCache = {};
     var toastTimer = null;
     var progressShown = 0;
     var lobbyShown = false;
     var speaking = false;
+    var taskBuilder = null;
+    var freeBuilder = null;
+    var currentBuildKey = null;
 
     var el = {};
 
@@ -377,6 +429,10 @@
             items[j].classList.toggle('is-active', items[j].getAttribute('data-section') === section);
         }
         if (el.content) el.content.scrollTop = 0;
+        if (section === 'builder') {
+            mountBuilders();
+            if (freeBuilder) setTimeout(function () { freeBuilder.resize(); }, 30);
+        }
     }
 
     /* ---------- Лобби ---------- */
@@ -586,6 +642,10 @@
         /* Поля ответа */
         renderAnswers(task, key);
 
+        /* Конструктор: своя постройка для каждого задания */
+        currentBuildKey = key;
+        if (taskBuilder) taskBuilder.setBricks(builds[key] || []);
+
         /* Кнопки */
         el.btnPrev.disabled = state.taskIndex === 0;
         el.btnNext.disabled = state.taskIndex >= list.length - 1;
@@ -763,6 +823,38 @@
         if (el.btnSpeak) el.btnSpeak.classList.remove('speaking');
     }
 
+    /* ---------- Конструктор ---------- */
+
+    function builderLabel(key) {
+        return ui(key);
+    }
+
+    function mountBuilders() {
+        if (!window.MBBuilder) return;
+
+        if (el.taskBuilderHost && !taskBuilder) {
+            taskBuilder = window.MBBuilder.mount(el.taskBuilderHost, {
+                label: builderLabel,
+                onChange: function (bricks) {
+                    if (!currentBuildKey) return;
+                    builds[currentBuildKey] = bricks;
+                    writeStore(STORAGE.builds, builds);
+                }
+            });
+        }
+
+        if (el.freeBuilderHost && !freeBuilder) {
+            freeBuilder = window.MBBuilder.mount(el.freeBuilderHost, {
+                label: builderLabel,
+                onChange: function (bricks) {
+                    builds.free = bricks;
+                    writeStore(STORAGE.builds, builds);
+                }
+            });
+            freeBuilder.setBricks(builds.free || []);
+        }
+    }
+
     /* ---------- Картинка ---------- */
 
     function openImage(src) {
@@ -789,8 +881,13 @@
         if (!window.confirm(ui('resetConfirm'))) return;
         answers = {};
         doneMap = {};
+        builds = {};
+        currentBuildKey = null;
         writeStore(STORAGE.answers, answers);
         writeStore(STORAGE.done, doneMap);
+        writeStore(STORAGE.builds, builds);
+        if (taskBuilder) taskBuilder.setBricks([]);
+        if (freeBuilder) freeBuilder.setBricks([]);
         renderLobby();
         renderSettingsSummary();
         if (state.activityId && el.activity.classList.contains('is-active')) {
@@ -825,6 +922,8 @@
         document.documentElement.lang = lang;
         applyStaticTexts();
         applyLangButtons();
+        if (taskBuilder) taskBuilder.setLabels(builderLabel);
+        if (freeBuilder) freeBuilder.setLabels(builderLabel);
         renderLobby();
         renderSettingsSummary();
         if (state.activityId && el.activity.classList.contains('is-active')) {
@@ -986,6 +1085,8 @@
         el.modalClose = byId('modal-close');
         el.toast = byId('toast');
         el.loaderText = document.querySelector('.loader-sub');
+        el.taskBuilderHost = byId('task-builder');
+        el.freeBuilderHost = byId('free-builder');
     }
 
     function boot() {
@@ -995,13 +1096,16 @@
         if (typeof TR.setLang === 'function') TR.setLang(lang);
         answers = readStore(STORAGE.answers, {});
         doneMap = readStore(STORAGE.done, {});
+        builds = readStore(STORAGE.builds, {});
         if (!answers || typeof answers !== 'object') answers = {};
         if (!doneMap || typeof doneMap !== 'object') doneMap = {};
+        if (!builds || typeof builds !== 'object') builds = {};
 
         document.documentElement.lang = lang;
         applyStaticTexts();
         applyLangButtons();
         bindEvents();
+        mountBuilders();
         renderLobby();
         renderSettingsSummary();
 

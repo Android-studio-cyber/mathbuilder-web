@@ -6,7 +6,7 @@
     <title>MathBuilder — LEGO® Education MoreToMath</title>
     <meta name="description" content="MathBuilder — интерактивные уроки математики LEGO Education MoreToMath. 16 активностей, 155 заданий.">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23ce1126'/%3E%3Ccircle cx='30' cy='30' r='10' fill='%23fff'/%3E%3Ccircle cx='70' cy='30' r='10' fill='%23fff'/%3E%3Ccircle cx='30' cy='70' r='10' fill='%23fff'/%3E%3Ccircle cx='70' cy='70' r='10' fill='%23fff'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="css/style.css?v=2.0">
+    <link rel="stylesheet" href="css/style.css?v=3.0">
 </head>
 <body>
 <div id="app">
@@ -71,12 +71,12 @@
                     <h2 data-i18n="builderTitle">Конструктор</h2>
                     <p class="subtitle" data-i18n="builderSubtitle">Свободная игра с кирпичиками</p>
                 </div>
-                <div class="panel placeholder-panel">
-                    <div class="placeholder-ico">🧱</div>
-                    <h3 data-i18n="builderHead">3D-конструктор появится в следующей версии</h3>
-                    <p data-i18n="builderText">В оригинальном приложении этот раздел — пустая пластина и полная палитра кирпичиков для свободного строительства. Перенос 3D-движка в браузер — следующий этап работы.</p>
-                    <p class="muted" data-i18n="builderNote">А пока все 155 заданий с картинками и полями ответов уже доступны в разделе «Уроки».</p>
-                    <button type="button" class="btn primary" data-goto="lessons" data-i18n="builderCta">Перейти к урокам</button>
+                <div class="panel builder-card free">
+                    <div class="builder-head">
+                        <span class="card-label" data-i18n="buildHere">Стройте здесь</span>
+                        <span class="builder-tip" data-i18n="builderTip">Крутите поле мышью или пальцем, ставьте кирпичики на пластину</span>
+                    </div>
+                    <div id="free-builder" class="builder-host free"></div>
                 </div>
             </section>
 
@@ -182,6 +182,14 @@
             </aside>
 
             <main class="main">
+                <div class="panel builder-card">
+                    <div class="builder-head">
+                        <span class="card-label" data-i18n="buildHere">Стройте здесь</span>
+                        <span class="builder-tip" data-i18n="studTip">1 шип — это один пупырышек на кирпичике</span>
+                    </div>
+                    <div id="task-builder" class="builder-host"></div>
+                </div>
+
                 <div class="panel answer-card">
                     <div class="card-label" data-i18n="answerLabel">Ответ</div>
                     <div class="answer-groups" id="answer-groups"></div>
@@ -207,8 +215,10 @@
     <div id="toast" class="toast" role="status"></div>
 </div>
 
-<script src="js/translations.js?v=2.0"></script>
-<script src="js/data.js?v=2.0"></script>
-<script src="js/app.js?v=2.0"></script>
+<script src="js/translations.js?v=3.0"></script>
+<script src="js/data.js?v=3.0"></script>
+<script src="js/task-texts-ru.js?v=3.0"></script>
+<script src="js/builder.js?v=3.0"></script>
+<script src="js/app.js?v=3.0"></script>
 </body>
 </html>
