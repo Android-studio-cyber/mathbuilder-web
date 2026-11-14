@@ -5,7 +5,6 @@
 (function () {
     'use strict';
 
-    var N = 16;                 // размер пластины в шипах
     var BRICK_H = 1.2;          // высота кирпичика (в шипах)
 
     var COLORS = [
@@ -99,6 +98,8 @@
 
     function mount(host, opts) {
         opts = opts || {};
+        var NX = clamp(opts.cols || 16, 4, 60);
+        var NZ = clamp(opts.rows || 16, 4, 60);
         var label = opts.label || function (key) { return key; };
         var onChange = opts.onChange || function () {};
 
@@ -225,8 +226,8 @@
             var v = (sy - g.cy) / g.k;
             var w = (v + y * cp) / sp;
             return {
-                x: u * c + w * s + N / 2,
-                z: -u * s + w * c + N / 2
+                x: u * c + w * s + NX / 2,
+                z: -u * s + w * c + NZ / 2
             };
         }
 
@@ -237,8 +238,8 @@
         /* ---------- Отрисовка ---------- */
 
         function drawBox(g, P, x0, z0, x1, z1, y0, y1, color, alpha) {
-            var X0 = x0 - N / 2, X1 = x1 - N / 2;
-            var Z0 = z0 - N / 2, Z1 = z1 - N / 2;
+            var X0 = x0 - NX / 2, X1 = x1 - NX / 2;
+            var Z0 = z0 - NZ / 2, Z1 = z1 - NZ / 2;
             var d = viewDir(g);
 
             var faces = [
@@ -276,7 +277,7 @@
             var ry = Math.max(1.2, rx * sp);
             for (var bx = x0; bx < x1 - 0.01; bx++) {
                 for (var bz = z0; bz < z1 - 0.01; bz++) {
-                    var c = P(bx + 0.5 - N / 2, y1, bz + 0.5 - N / 2);
+                    var c = P(bx + 0.5 - NX / 2, y1, bz + 0.5 - NZ / 2);
                     ctx.beginPath();
                     ctx.ellipse(c.x, c.y, rx, ry, 0, 0, Math.PI * 2);
                     ctx.fillStyle = shade(color, 1.3);
@@ -303,7 +304,7 @@
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.clearRect(0, 0, W, H);
 
-            var k = Math.min(W / 27, H / 17.5) * state.zoom;
+            var k = Math.min(W / ((NX + NZ) * 0.75 + 6), H / ((NX + NZ) * 0.33 + 6)) * state.zoom;
             var g = {
                 k: k,
                 cx: W / 2,
@@ -320,10 +321,10 @@
             ctx.fillStyle = 'rgba(120, 150, 110, 0.12)';
             ctx.beginPath();
             var corners = [
-                P(-N / 2 - 1.5, -0.9, -N / 2 - 1.5),
-                P(N / 2 + 1.5, -0.9, -N / 2 - 1.5),
-                P(N / 2 + 1.5, -0.9, N / 2 + 1.5),
-                P(-N / 2 - 1.5, -0.9, N / 2 + 1.5)
+                P(-NX / 2 - 1.5, -0.9, -NZ / 2 - 1.5),
+                P(NX / 2 + 1.5, -0.9, -NZ / 2 - 1.5),
+                P(NX / 2 + 1.5, -0.9, NZ / 2 + 1.5),
+                P(-NX / 2 - 1.5, -0.9, NZ / 2 + 1.5)
             ];
             ctx.moveTo(corners[0].x, corners[0].y);
             for (var ci = 1; ci < 4; ci++) ctx.lineTo(corners[ci].x, corners[ci].y);
@@ -331,17 +332,19 @@
             ctx.fill();
 
             /* Пластина */
-            drawBox(g, P, 0, 0, N, N, -0.6, 0, '#7fa65f', 1);
+            drawBox(g, P, 0, 0, NX, NZ, -0.6, 0, '#7fa65f', 1);
 
             /* Сетка шипов */
             ctx.beginPath();
-            for (var i = 0; i <= N; i++) {
-                var a1 = P(i - N / 2, 0.001, -N / 2);
-                var a2 = P(i - N / 2, 0.001, N / 2);
+            for (var i = 0; i <= NX; i++) {
+                var a1 = P(i - NX / 2, 0.001, -NZ / 2);
+                var a2 = P(i - NX / 2, 0.001, NZ / 2);
                 ctx.moveTo(a1.x, a1.y);
                 ctx.lineTo(a2.x, a2.y);
-                var b1 = P(-N / 2, 0.001, i - N / 2);
-                var b2 = P(N / 2, 0.001, i - N / 2);
+            }
+            for (var j = 0; j <= NZ; j++) {
+                var b1 = P(-NX / 2, 0.001, j - NZ / 2);
+                var b2 = P(NX / 2, 0.001, j - NZ / 2);
                 ctx.moveTo(b1.x, b1.y);
                 ctx.lineTo(b2.x, b2.y);
             }
@@ -366,7 +369,7 @@
                 for (var dx = 0; dx <= 1; dx++) {
                     for (var dz = 0; dz <= 1; dz++) {
                         for (var dy = 0; dy <= 1; dy++) {
-                            pts.push(P(brick.x + dx * brick.w - N / 2, y0 + dy * BRICK_H, brick.z + dz * brick.d - N / 2));
+                            pts.push(P(brick.x + dx * brick.w - NX / 2, y0 + dy * BRICK_H, brick.z + dz * brick.d - NZ / 2));
                         }
                     }
                 }
@@ -433,8 +436,8 @@
         }
 
         function placement(cx, cz, w, d) {
-            var x0 = clamp(cx - Math.floor((w - 1) / 2), 0, N - w);
-            var z0 = clamp(cz - Math.floor((d - 1) / 2), 0, N - d);
+            var x0 = clamp(cx - Math.floor((w - 1) / 2), 0, NX - w);
+            var z0 = clamp(cz - Math.floor((d - 1) / 2), 0, NZ - d);
             var level = -1;
             var ok = true;
             for (var i = 0; i < w; i++) {
@@ -498,7 +501,7 @@
                 cx = clamp(cx, hit.brick.x, hit.brick.x + hit.brick.w - 1);
                 cz = clamp(cz, hit.brick.z, hit.brick.z + hit.brick.d - 1);
             }
-            if (cx < 0 || cz < 0 || cx >= N || cz >= N) return null;
+            if (cx < 0 || cz < 0 || cx >= NX || cz >= NZ) return null;
             var size = effectiveSize();
             return { hit: hit, place: placement(cx, cz, size.w, size.d) };
         }
@@ -545,10 +548,10 @@
             state.bricks = (list || []).map(function (b) {
                 return {
                     id: nextId++,
-                    x: clamp(b.x | 0, 0, N - 1),
-                    z: clamp(b.z | 0, 0, N - 1),
-                    w: clamp(b.w | 0, 1, N),
-                    d: clamp(b.d | 0, 1, N),
+                    x: clamp(b.x | 0, 0, NX - 1),
+                    z: clamp(b.z | 0, 0, NZ - 1),
+                    w: clamp(b.w | 0, 1, NX),
+                    d: clamp(b.d | 0, 1, NZ),
                     level: Math.max(0, b.level | 0),
                     color: typeof b.color === 'string' ? b.color : COLORS[0].hex
                 };
@@ -782,6 +785,21 @@
         var api = {
             setBricks: function (list) {
                 load(list, true);
+            },
+            setSize: function (cols, rows) {
+                var nx = clamp(cols | 0, 4, 60);
+                var nz = clamp(rows | 0, 4, 60);
+                if (nx === NX && nz === NZ) return;
+                NX = nx;
+                NZ = nz;
+                state.bricks.forEach(function (b) {
+                    b.w = Math.min(b.w, NX);
+                    b.d = Math.min(b.d, NZ);
+                    b.x = clamp(b.x, 0, NX - b.w);
+                    b.z = clamp(b.z, 0, NZ - b.d);
+                });
+                settle();
+                render();
             },
             getBricks: function () {
                 return serialize();

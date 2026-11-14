@@ -208,6 +208,11 @@
 
     var THEME_KEYS = ['animals', 'outdoors', 'sports', 'food'];
 
+    /* Размер пластины для активностей, где нужна длинная постройка */
+    var PLATE_OF = {
+        '7': { cols: 44, rows: 10 }
+    };
+
     var STORAGE = {
         lang: 'mb.lang',
         answers: 'mb.answers.v2',
@@ -644,7 +649,11 @@
 
         /* Конструктор: своя постройка для каждого задания */
         currentBuildKey = key;
-        if (taskBuilder) taskBuilder.setBricks(builds[key] || []);
+        if (taskBuilder) {
+            var plate = PLATE_OF[String(id)] || { cols: 16, rows: 16 };
+            taskBuilder.setSize(plate.cols, plate.rows);
+            taskBuilder.setBricks(builds[key] || []);
+        }
 
         /* Кнопки */
         el.btnPrev.disabled = state.taskIndex === 0;
