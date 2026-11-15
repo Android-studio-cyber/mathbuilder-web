@@ -22,7 +22,9 @@
 
     var SIZES = [
         { w: 1, d: 1 }, { w: 2, d: 1 }, { w: 3, d: 1 }, { w: 4, d: 1 },
-        { w: 6, d: 1 }, { w: 2, d: 2 }, { w: 4, d: 2 }, { w: 6, d: 2 }
+        { w: 6, d: 1 }, { w: 8, d: 1 },
+        { w: 2, d: 2 }, { w: 3, d: 2 }, { w: 4, d: 2 }, { w: 6, d: 2 }, { w: 8, d: 2 },
+        { w: 4, d: 4 }, { w: 6, d: 4 }, { w: 8, d: 8 }
     ];
 
     var ACTIONS = {
@@ -106,12 +108,12 @@
         var state = {
             bricks: [],
             sel: { w: 2, d: 1, color: COLORS[0].hex },
-            rotated: false,
             yaw: Math.PI / 4,
             pitch: Math.PI / 6,
             zoom: 1,
             mode: 'build',
-            ghost: null
+            ghost: null,
+            hoverId: null
         };
 
         var history = [];
@@ -145,7 +147,8 @@
                 '<div class="b-row b-sizes"></div>' +
                 '<div class="b-row b-colors"></div>' +
             '</div>' +
-            '<div class="builder-stats"></div>';
+            '<div class="builder-stats"></div>' +
+            '<div class="builder-mode-hint"></div>';
 
         host.appendChild(root);
 
@@ -155,6 +158,7 @@
         var sizesBox = root.querySelector('.b-sizes');
         var colorsBox = root.querySelector('.b-colors');
         var statsBox = root.querySelector('.builder-stats');
+        var modeHint = root.querySelector('.builder-mode-hint');
         var ctx = canvas.getContext('2d');
 
         /* ---------- Палитра ---------- */
@@ -170,7 +174,6 @@
             btn.addEventListener('click', function () {
                 state.sel.w = size.w;
                 state.sel.d = size.d;
-                state.rotated = false;
                 refreshPalette();
             });
             sizesBox.appendChild(btn);
@@ -205,6 +208,7 @@
                 mini.style.background = state.sel.color;
             });
             root.querySelector('[data-act="erase"]').classList.toggle('is-active', state.mode === 'erase');
+            root.querySelector('[data-act="rotate"]').classList.toggle('is-active', state.mode === 'rotate');
         }
 
         /* ---------- Проекция ---------- */
@@ -376,6 +380,23 @@
                 hits.push({ brick: brick, poly: convexHull(pts) });
             });
 
+            /* Подсветка кирпичика под курсором в режимах поворота/ластика */
+            if (state.hoverId !== null && (state.mode === 'rotate' || state.mode === 'erase')) {
+                for (var hi = 0; hi < hits.length; hi++) {
+                    if (hits[hi].brick.id === state.hoverId) {
+                        var hp = hits[hi].poly;
+                        ctx.beginPath();
+                        ctx.moveTo(hp[0].x, hp[0].y);
+                        for (var hpi = 1; hpi < hp.length; hpi++) ctx.lineTo(hp[hpi].x, hp[hpi].y);
+                        ctx.closePath();
+                        ctx.strokeStyle = state.mode === 'rotate' ? 'rgba(0, 105, 192, 0.9)' : 'rgba(209, 52, 56, 0.9)';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        break;
+                    }
+                }
+            }
+
             /* Призрак нового кирпичика */
             if (state.ghost) {
                 var gh = state.ghost;
@@ -413,14 +434,23 @@
                 ' · ' + label('length') + ': ' + length +
                 ' · ' + label('width') + ': ' + width +
                 ' · ' + label('height') + ': ' + height;
+
+            if (modeHint) {
+                if (state.mode === 'rotate') {
+                    modeHint.textContent = label('rotateModeHint');
+                } else if (state.mode === 'erase') {
+                    modeHint.textContent = label('eraseModeHint');
+                } else {
+                    modeHint.textContent = '';
+                }
+                modeHint.classList.toggle('is-visible', state.mode !== 'build');
+            }
         }
 
         /* ---------- Логика сетки ---------- */
 
         function effectiveSize() {
-            return state.rotated
-                ? { w: state.sel.d, d: state.sel.w }
-                : { w: state.sel.w, d: state.sel.d };
+            return { w: state.sel.w, d: state.sel.d };
         }
 
         function topAt(cx, cz, exceptId) {
@@ -459,18 +489,16 @@
                 state.bricks.sort(function (a, b) { return a.level - b.level; });
                 for (var i = 0; i < state.bricks.length; i++) {
                     var b = state.bricks[i];
-                    var canFall = true;
-                    while (b.level > 0 && canFall) {
-                        canFall = true;
+                    while (b.level > 0) {
+                        var canFall = true;
                         for (var x = b.x; x < b.x + b.w && canFall; x++) {
                             for (var z = b.z; z < b.z + b.d && canFall; z++) {
-                                if (topAt(x, z, b.id) < b.level) canFall = false;
+                                if (topAt(x, z, b.id) >= b.level) canFall = false;
                             }
                         }
-                        if (canFall) {
-                            b.level--;
-                            moved = true;
-                        }
+                        if (!canFall) break;
+                        b.level--;
+                        moved = true;
                     }
                 }
             }
@@ -534,6 +562,33 @@
             return true;
         }
 
+        function rotateBrick(id) {
+            var brick = null;
+            for (var i = 0; i < state.bricks.length; i++) {
+                if (state.bricks[i].id === id) { brick = state.bricks[i]; break; }
+            }
+            if (!brick || brick.w === brick.d) return;
+            var nw = brick.d, nd = brick.w;
+            var nx = clamp(brick.x + Math.round((brick.w - nw) / 2), 0, NX - nw);
+            var nz = clamp(brick.z + Math.round((brick.d - nd) / 2), 0, NZ - nd);
+            /* Проверка: не сталкивается ли с другими кирпичиками на том же уровне */
+            var conflict = false;
+            for (var i = 0; i < state.bricks.length && !conflict; i++) {
+                var ob = state.bricks[i];
+                if (ob.id === brick.id) continue;
+                if (ob.level !== brick.level) continue;
+                if (nx < ob.x + ob.w && nx + nw > ob.x && nz < ob.z + ob.d && nz + nd > ob.z) conflict = true;
+            }
+            if (conflict) return;
+            history.push(serialize());
+            if (history.length > 60) history.shift();
+            brick.w = nw; brick.d = nd;
+            brick.x = nx; brick.z = nz;
+            settle();
+            emit();
+            render();
+        }
+
         function emit() {
             onChange(serialize());
         }
@@ -595,8 +650,15 @@
 
             if (!(event.pointerId in active)) {
                 if (event.pointerType === 'mouse') {
-                    var hover = hoverAt(pt);
-                    state.ghost = hover ? hover.place : null;
+                    if (state.mode === 'build') {
+                        var hover = hoverAt(pt);
+                        state.ghost = hover ? hover.place : null;
+                        state.hoverId = null;
+                    } else {
+                        state.ghost = null;
+                        var hov = hitTest(pt);
+                        state.hoverId = hov ? hov.brick.id : null;
+                    }
                     render();
                 }
                 return;
@@ -633,8 +695,15 @@
                 state.ghost = null;
                 render();
             } else if (event.pointerType === 'mouse') {
-                var hover2 = hoverAt(pt);
-                state.ghost = hover2 ? hover2.place : null;
+                if (state.mode === 'build') {
+                    var hover2 = hoverAt(pt);
+                    state.ghost = hover2 ? hover2.place : null;
+                    state.hoverId = null;
+                } else {
+                    state.ghost = null;
+                    var hov2 = hitTest(pt);
+                    state.hoverId = hov2 ? hov2.brick.id : null;
+                }
                 render();
             }
         });
@@ -667,14 +736,23 @@
                 return;
             }
 
-            var hover = hoverAt(pt);
-            if (!hover) {
-                state.ghost = null;
+            if (state.mode === 'rotate') {
+                var rotHit = hitTest(pt);
+                state.hoverId = null;
+                if (rotHit) rotateBrick(rotHit.brick.id);
                 render();
                 return;
             }
             if (state.mode === 'erase') {
-                erase(hover.hit);
+                var delHit = hitTest(pt);
+                if (delHit) erase(delHit);
+                return;
+            }
+
+            var hover = hoverAt(pt);
+            if (!hover) {
+                state.ghost = null;
+                render();
                 return;
             }
             if (!hover.hit) {
@@ -700,8 +778,8 @@
 
         canvas.addEventListener('contextmenu', function (event) {
             event.preventDefault();
-            var hover = hoverAt(canvasPoint(event));
-            if (hover && hover.hit) erase(hover.hit);
+            var ctxHit = hitTest(canvasPoint(event));
+            if (ctxHit) erase(ctxHit);
         });
 
         canvas.addEventListener('wheel', function (event) {
@@ -712,8 +790,9 @@
         }, { passive: false });
 
         canvas.addEventListener('pointerleave', function () {
-            if (!Object.keys(active).length && state.ghost) {
+            if (!Object.keys(active).length && (state.ghost || state.hoverId !== null)) {
                 state.ghost = null;
+                state.hoverId = null;
                 render();
             }
         });
@@ -742,12 +821,16 @@
                     render();
                     break;
                 case 'rotate':
-                    state.rotated = !state.rotated;
+                    state.mode = state.mode === 'rotate' ? 'build' : 'rotate';
+                    state.ghost = null;
+                    state.hoverId = null;
                     refreshPalette();
+                    render();
                     break;
                 case 'erase':
                     state.mode = state.mode === 'erase' ? 'build' : 'erase';
                     state.ghost = null;
+                    state.hoverId = null;
                     refreshPalette();
                     render();
                     break;
@@ -814,8 +897,11 @@
                 if (history.length) load(history.pop(), false);
             },
             setMode: function (mode) {
-                state.mode = mode === 'erase' ? 'erase' : 'build';
+                state.mode = (mode === 'erase' || mode === 'rotate') ? mode : 'build';
+                state.ghost = null;
+                state.hoverId = null;
                 refreshPalette();
+                render();
             },
             setLabels: function (fn) {
                 label = fn || label;

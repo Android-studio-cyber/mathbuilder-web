@@ -1194,6 +1194,20 @@ img {
     color: var(--text-soft);
 }
 
+.builder-mode-hint {
+    flex: 0 0 auto;
+    text-align: center;
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--primary);
+    min-height: 0;
+    line-height: 1.35;
+    opacity: 0;
+    transition: opacity .15s ease;
+}
+
+.builder-mode-hint.is-visible { opacity: 1; }
+
 .builder-empty {
     position: absolute;
     inset: 0;
